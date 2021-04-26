@@ -12,29 +12,20 @@ import { Header } from "../components/Header";
 import { api } from "../services/api";
 import colors from "../styles/colors";
 import fonts from "../styles/fonts";
-import { PlantCardPrimary } from "./PlantCardPrimary";
+import { PlantCardPrimary } from "../components/PlantCardPrimary";
 import { Load } from "../components/Load";
 import { set } from "react-native-reanimated";
+import { useNavigation } from "@react-navigation/native";
+
+import { Plants } from "../libs/storage";
 
 interface Enviroments {
   key: string;
   title: string;
 }
 
-interface Plants {
-  id: string;
-  name: string;
-  about: string;
-  water_tips: string;
-  photo: string;
-  environments: [string];
-  frequency: {
-    times: number;
-    repeat_every: string;
-  };
-}
-
 export function PlantSelect() {
+  const navigation = useNavigation();
   const [enviroments, setEnviroments] = useState<Enviroments[]>([]);
   const [plants, setPlants] = useState<Plants[]>([]);
   const [filteredPlants, setFilteredPlants] = useState<Plants[]>([]);
@@ -43,7 +34,6 @@ export function PlantSelect() {
 
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [loadedAll, setLoadedAll] = useState(false);
 
   useEffect(() => {
     async function loadEnviroments() {
@@ -65,6 +55,10 @@ export function PlantSelect() {
   useEffect(() => {
     loadPlants();
   }, []);
+
+  function handlePlantSelect(plant: Plants) {
+    navigation.navigate("PlantSave", { plant });
+  }
 
   async function loadPlants() {
     const { data } = await api.get<Plants[]>(
@@ -142,7 +136,13 @@ export function PlantSelect() {
       <View style={styles.plants}>
         <FlatList
           data={filteredPlants}
-          renderItem={({ item }) => <PlantCardPrimary data={item} />}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => (
+            <PlantCardPrimary
+              data={item}
+              onPress={() => handlePlantSelect(item)}
+            />
+          )}
           showsVerticalScrollIndicator={false}
           numColumns={2}
           contentContainerStyle={styles.plantList}
